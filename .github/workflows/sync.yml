@@ -102,7 +102,7 @@ jobs:
           git reset .github/workflows || true
           git add -A
 
-          git commit -m "Auto-sync upstream/${BRANCH} changes (excluding workflows)" || echo "Nothing to commit"
+          git commit -m "$(date -u '+%Y-%m-%d %H:%M UTC') Auto-sync upstream/${BRANCH} changes (excluding workflows)" || echo "Nothing to commit"
 
       - name: Push changes
         if: steps.check.outputs.skip == 'false'
