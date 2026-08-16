@@ -98,9 +98,11 @@ jobs:
           fi
 
           # 6. Stage all, then unstage workflows
+          #git add -A
+          #git reset .github/workflows || true
+          #git add -A
           git add -A
-          git reset .github/workflows || true
-          git add -A
+          git reset -- .github/workflows/ || true
 
           git commit -m "$(date -u '+%Y-%m-%d %H:%M UTC') Auto-sync upstream/${BRANCH} changes (excluding workflows)" || echo "Nothing to commit"
 
