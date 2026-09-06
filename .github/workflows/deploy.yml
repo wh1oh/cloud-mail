@@ -82,7 +82,7 @@ jobs:
           #echo "$JWT_SECRET" | npx wrangler secret put jwt_secret \
           #  --config wrangler.wh1oh.toml --name "${{ vars.WORKER_NAME || 'cloud-mail' }}"
 
-      - name: ♻️ 初始化数据库 / Initialize database
+      - name: Initialize database
         env:
           CUSTOM_DOMAIN: ${{ secrets.CUSTOM_DOMAIN }}
           JWT_SECRET: ${{ secrets.MAIL_JWT_SECRET }}
