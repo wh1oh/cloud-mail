@@ -51,4 +51,4 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: mail-worker
           wranglerVersion: '4'
-          command: deploy --config wrangler.wh1oh.toml
+          command: deploy --config wrangler.wh1oh.toml --name ${{ vars.WORKER_NAME }}
