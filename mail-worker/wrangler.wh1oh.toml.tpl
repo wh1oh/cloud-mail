@@ -39,7 +39,7 @@ crons = ["0 16 * * *"]	#每天晚上12点执行每日任务,刷新分析缓存
 [vars]
 admin = "${MAIL_ADMIN}"
 project_link = ${MAIL_PROJECT_LINK}
-jwt_secret = "${MAIL_JWT_SECRET}"
+#jwt_secret = "${MAIL_JWT_SECRET}"
 domain = ${MAIL_DOMAINS}
 #ai_model = ""			#ai模型,不填默认使用@cf/meta/llama-3.1-8b-instruct
 #analysis_cache = false			#是否开启分析数据缓存
