@@ -82,33 +82,25 @@ jobs:
           #echo "$JWT_SECRET" | npx wrangler secret put jwt_secret \
           #  --config wrangler.wh1oh.toml --name "${{ vars.WORKER_NAME || 'cloud-mail' }}"
 
-      - name: Initialize database
+      - name: ♻️ 初始化数据库 / Initialize database
         env:
           CUSTOM_DOMAIN: ${{ secrets.CUSTOM_DOMAIN }}
           JWT_SECRET: ${{ secrets.MAIL_JWT_SECRET }}
-          DEPLOYED_WORKER_URL: ${{ steps.deploy.outputs.worker_url }}
+          RETRY_TIMES: 5
+          RETRY_DELAY: 5
         run: |
           set -e
 
-          if [ -n "$CUSTOM_DOMAIN" ]; then
-            WORKER_URL="https://$CUSTOM_DOMAIN"
-          else
-            WORKER_URL="$DEPLOYED_WORKER_URL"
-          fi
-
-          if [ -z "$WORKER_URL" ]; then
-            echo "❌ Worker URL not available."
-            echo "Please set CUSTOM_DOMAIN or check the deploy output."
+          WORKER_URL="https://$CUSTOM_DOMAIN"
+          if [ -z "$CUSTOM_DOMAIN" ]; then
+            echo "❌ CUSTOM_DOMAIN is not configured."
             exit 1
           fi
-
           INIT_URL="$WORKER_URL/api/init/$JWT_SECRET"
 
-          echo "URL: $INIT_URL"
           echo "🛠️ Starting database initialization..."
-
-          for i in {1..3}; do
-            echo "🔄 Initialization attempt $i/3..."
+          for i in $(seq 1 "$RETRY_TIMES"); do
+            echo "🔄 Initialization attempt $i/$RETRY_TIMES..."
             RESPONSE=$(curl -sS \
               -L \
               --connect-timeout 10 \
@@ -117,17 +109,19 @@ jobs:
               "$INIT_URL") || RESPONSE=""
             HTTP_CODE=$(printf '%s\n' "$RESPONSE" | tail -n1)
             RESPONSE_BODY=$(printf '%s\n' "$RESPONSE" | sed '$d')
+
             if [ "$HTTP_CODE" = "200" ] && [ "$RESPONSE_BODY" = "success" ]; then
               echo "✅ Database initialization completed."
               exit 0
             fi
-            echo "⚠️Failed. HTTP: ${HTTP_CODE:-000}, Response: ${RESPONSE_BODY:-<empty>}"
-            if [ "$i" -lt 5 ]; then
+
+            echo "⚠️ Failed. HTTP: ${HTTP_CODE:-000}, Response: ${RESPONSE_BODY:-<empty>}"
+            if [ "$i" -lt "$RETRY_TIMES" ]; then
               echo "⏳ Retrying in 5 seconds..."
-              sleep 5
+              sleep "$RETRY_DELAY"
             fi
           done
-          echo "❌ Database initialization failed after 5 attempts."
+          echo "❌ Database initialization failed after $RETRY_TIMES attempts."
           exit 1
 
       - name: Cleanup old Worker versions (keep latest 2)
