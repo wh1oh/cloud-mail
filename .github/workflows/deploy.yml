@@ -3,7 +3,7 @@ name: Deploy Worker
 on:
   push:
     branches:
-      - main   # 改成你的生产分支名,比如 master
+      - main # 改成你的生产分支名,比如 master
     paths:
       - 'mail-worker/**'
       - 'mail-vue/**'
@@ -19,9 +19,9 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v5
+        uses: pnpm/action-setup@v6
         with:
-          version: 9   # 按项目实际 pnpm 大版本调整
+          version: 9 # 按项目实际 pnpm 大版本调整
 
       - name: Setup Node
         uses: actions/setup-node@v5
@@ -42,16 +42,30 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm run build
 
+      - name: Generate wrangler.toml from secrets
+        working-directory: mail-worker
+        env:
+          WORKER_NAME: ${{ vars.WORKER_NAME }}
+          MAIL_ADMIN: ${{ secrets.MAIL_ADMIN }}
+          MAIL_JWT_SECRET: ${{ secrets.MAIL_JWT_SECRET }}
+          MAIL_PROJECT_LINK: ${{ vars.MAIL_PROJECT_LINK }}
+          MAIL_DOMAINS: ${{ vars.MAIL_DOMAINS }}
+        run: |
+          export WORKER_NAME="${WORKER_NAME:-cloud-mail}"
+          export MAIL_PROJECT_LINK="${MAIL_PROJECT_LINK:-false}"
+          export MAIL_DOMAINS="${MAIL_DOMAINS:-[]}"
+          envsubst < wrangler.wh1oh.toml.tpl > wrangler.wh1oh.toml
+
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v4
         env:
-          NODE_ENV: development   # 避免自定义 build 内部的 pnpm install 跳过 devDependencies(如 vite)
+          NODE_ENV: development # 避免自定义 build 内部的 pnpm install 跳过 devDependencies(如 vite)
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: mail-worker
           wranglerVersion: '4'
-          command: deploy --config wrangler.wh1oh.toml --name ${{ vars.WORKER_NAME }}
+          command: deploy --config wrangler.wh1oh.toml
 
       - name: Cleanup old Worker versions (keep latest 2)
         env:
