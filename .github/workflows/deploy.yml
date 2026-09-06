@@ -50,10 +50,12 @@ jobs:
           MAIL_JWT_SECRET: ${{ secrets.MAIL_JWT_SECRET }}
           MAIL_PROJECT_LINK: ${{ vars.MAIL_PROJECT_LINK }}
           MAIL_DOMAINS: ${{ secrets.MAIL_DOMAINS }}
+          CUSTOM_DOMAIN: ${{ secrets.CUSTOM_DOMAIN }}
         run: |
           export WORKER_NAME="${WORKER_NAME:-cloud-mail}"
           export MAIL_PROJECT_LINK="${MAIL_PROJECT_LINK:-false}"
           export MAIL_DOMAINS="${MAIL_DOMAINS:-[]}"
+          export CUSTOM_DOMAIN="${CUSTOM_DOMAIN:-mail.example.com}"
           envsubst < wrangler.wh1oh.toml.tpl > wrangler.wh1oh.toml
 
       - name: Deploy to Cloudflare Workers
