@@ -86,18 +86,26 @@ jobs:
         env:
           CUSTOM_DOMAIN: ${{ secrets.CUSTOM_DOMAIN }}
           JWT_SECRET: ${{ secrets.MAIL_JWT_SECRET }}
+          DEPLOYED_WORKER_URL: ${{ steps.deploy.outputs.worker_url }}
           RETRY_TIMES: 3
           RETRY_DELAY: 5
         run: |
           set -e
 
-          WORKER_URL="https://$CUSTOM_DOMAIN"
-          if [ -z "$CUSTOM_DOMAIN" ]; then
-            echo "❌ CUSTOM_DOMAIN is not configured."
+          if [ -n "$CUSTOM_DOMAIN" ]; then
+            WORKER_URL="https://$CUSTOM_DOMAIN"
+          else
+            WORKER_URL="$DEPLOYED_WORKER_URL"
+          fi
+
+          if [ -z "$WORKER_URL" ]; then
+            echo "❌ Worker URL not available."
+            echo "Please set CUSTOM_DOMAIN or check the deploy output."
             exit 1
           fi
           INIT_URL="$WORKER_URL/api/init/$JWT_SECRET"
 
+          echo "🌐 URL: $WORKER_URL"
           echo "🛠️ Starting database initialization..."
           for i in $(seq 1 "$RETRY_TIMES"); do
             echo "🔄 Initialization attempt $i/$RETRY_TIMES..."
