@@ -15,6 +15,7 @@ database_id = "004dcc0a-7b06-48d5-a5a6-ef65c285da1a"		#d1数据库id
 binding = "kv"			#kv绑定名默认不可修改
 id = "fb986954c2b346e9aadc7a5ed142fb8c"					#kv数据库id
 
+
 #[[r2_buckets]]
 #binding = "r2"			#r2对象存储绑定名默认不可修改
 #bucket_name = ""		#r2对象存储桶的名字
