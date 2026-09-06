@@ -59,13 +59,23 @@ jobs:
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v4
         env:
-          NODE_ENV: development # 避免自定义 build 内部的 pnpm install 跳过 devDependencies(如 vite)
+          NODE_ENV: development
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: mail-worker
           wranglerVersion: '4'
           command: deploy --config wrangler.wh1oh.toml
+
+      - name: Set jwt_secret as Worker Secret
+        working-directory: mail-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          JWT_SECRET: ${{ secrets.MAIL_JWT_SECRET }}
+        run: |
+          echo "$JWT_SECRET" | npx wrangler secret put jwt_secret \
+            --config wrangler.wh1oh.toml --name "${{ vars.WORKER_NAME || 'cloud-mail' }}"
 
       - name: Cleanup old Worker versions (keep latest 2)
         env:
