@@ -7,6 +7,10 @@ workers_dev = false
 [observability]
 enabled = false
 
+[[routes]]
+pattern = "${CUSTOM_DOMAIN}"
+custom_domain = true
+
 [[d1_databases]]
 binding = "db"			#d1数据库绑定名默认不可修改
 database_name = "cloud-mail"		#d1数据库名字
