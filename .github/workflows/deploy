@@ -1,0 +1,36 @@
+name: Deploy Worker
+
+on:
+  push:
+    branches:
+      - main   # 改成你的生产分支名,比如 master
+    paths:
+      - 'mail-worker/**'   # 只在该目录有改动时触发,可按需删除
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: mail-worker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install   # 如果用 pnpm/yarn 就换成对应命令
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: mail-worker
+          command: deploy --config wrangler.wh1oh.toml
