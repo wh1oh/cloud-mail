@@ -86,7 +86,7 @@ jobs:
         env:
           CUSTOM_DOMAIN: ${{ secrets.CUSTOM_DOMAIN }}
           JWT_SECRET: ${{ secrets.MAIL_JWT_SECRET }}
-          RETRY_TIMES: 5
+          RETRY_TIMES: 3
           RETRY_DELAY: 5
         run: |
           set -e
