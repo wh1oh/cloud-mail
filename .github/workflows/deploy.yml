@@ -6,6 +6,7 @@ on:
       - main   # 改成你的生产分支名,比如 master
     paths:
       - 'mail-worker/**'   # 只在该目录有改动时触发,可按需删除
+  workflow_dispatch:   # 支持手动触发(GitHub App / 网页端 Actions 页面都能点)
 
 jobs:
   deploy:
