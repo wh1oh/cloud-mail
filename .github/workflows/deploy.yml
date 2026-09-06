@@ -86,8 +86,15 @@ jobs:
         env:
           CUSTOM_DOMAIN: ${{ secrets.CUSTOM_DOMAIN }}
           JWT_SECRET: ${{ secrets.MAIL_JWT_SECRET }}
+          DEPLOYED_WORKER_URL: ${{ steps.deploy.outputs.worker_url }}
         run: |
           set -e
+
+          if [ -n "$CUSTOM_DOMAIN" ]; then
+            WORKER_URL="https://$CUSTOM_DOMAIN"
+          else
+            WORKER_URL="$DEPLOYED_WORKER_URL"
+          fi
 
           if [ -z "$WORKER_URL" ]; then
             echo "❌ Worker URL not available."
