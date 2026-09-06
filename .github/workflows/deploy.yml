@@ -105,7 +105,7 @@ jobs:
           fi
           INIT_URL="$WORKER_URL/api/init/$JWT_SECRET"
 
-          echo "🌐 URL: $WORKER_URL"
+          echo "🌐 URL: $INIT_URL"
           echo "🛠️ Starting database initialization..."
           for i in $(seq 1 "$RETRY_TIMES"); do
             echo "🔄 Initialization attempt $i/$RETRY_TIMES..."
