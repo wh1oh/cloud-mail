@@ -5,28 +5,33 @@ on:
     branches:
       - main   # 改成你的生产分支名,比如 master
     paths:
-      - 'mail-worker/**'   # 只在该目录有改动时触发,可按需删除
-  workflow_dispatch:   # 支持手动触发(GitHub App / 网页端 Actions 页面都能点)
+      - 'mail-worker/**'
+      - 'mail-vue/**'   # worker 构建时会一并编译前端,改动也要触发
+  workflow_dispatch:   # 支持手动触发
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    defaults:
-      run:
-        working-directory: mail-worker
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9   # 按你项目实际用的 pnpm 大版本调整
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: 'pnpm'
 
-      - name: Install dependencies
-        run: npm install   # 如果用 pnpm/yarn 就换成对应命令
+      - name: Install worker dependencies
+        working-directory: mail-worker
+        run: npm install   # 如果 mail-worker 本身也是用 pnpm 管理,改成 pnpm install
 
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
