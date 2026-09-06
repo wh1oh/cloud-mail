@@ -6,8 +6,8 @@ on:
       - main   # 改成你的生产分支名,比如 master
     paths:
       - 'mail-worker/**'
-      - 'mail-vue/**'   # worker 构建时会一并编译前端,改动也要触发
-  workflow_dispatch:   # 支持手动触发
+      - 'mail-vue/**'
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -21,17 +21,20 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9   # 按你项目实际用的 pnpm 大版本调整
+          version: 9   # 按项目实际 pnpm 大版本调整
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'pnpm'
+          cache-dependency-path: |
+            mail-worker/pnpm-lock.yaml
+            mail-vue/pnpm-lock.yaml
 
       - name: Install worker dependencies
         working-directory: mail-worker
-        run: npm install   # 如果 mail-worker 本身也是用 pnpm 管理,改成 pnpm install
+        run: npm install   # 如果 mail-worker 也用 pnpm 管理,改成 pnpm install
 
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
