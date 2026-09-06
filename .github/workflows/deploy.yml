@@ -52,3 +52,42 @@ jobs:
           workingDirectory: mail-worker
           wranglerVersion: '4'
           command: deploy --config wrangler.wh1oh.toml --name ${{ vars.WORKER_NAME }}
+
+      - name: Cleanup old Worker versions (keep latest 2)
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WORKER_NAME: ${{ vars.WORKER_NAME }}
+        run: |
+          set -e
+          API="https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID"
+
+          # 1. 通过名字找 worker_id
+          WORKER_ID=$(curl -s -H "Authorization: Bearer $CF_API_TOKEN" \
+            "$API/workers/workers?name=$WORKER_NAME" \
+            | jq -r --arg n "$WORKER_NAME" '.result[] | select(.name==$n) | .id' | head -n1)
+
+          if [ -z "$WORKER_ID" ]; then
+            echo "找不到 worker_id,跳过清理"; exit 0
+          fi
+
+          # 2. 当前正在提供流量的版本,永远不删
+          ACTIVE_IDS=$(curl -s -H "Authorization: Bearer $CF_API_TOKEN" \
+            "$API/workers/scripts/$WORKER_NAME/deployments" \
+            | jq -r '.result.deployments[0].versions[].version_id')
+
+          # 3. 列出全部版本,按时间倒序,跳过最新2个
+          curl -s -H "Authorization: Bearer $CF_API_TOKEN" \
+            "$API/workers/workers/$WORKER_ID/versions?per_page=100" \
+            | jq -r '.result | sort_by(.created_on) | reverse | .[2:] | .[].id' > old_versions.txt
+
+          while read -r VID; do
+            [ -z "$VID" ] && continue
+            if echo "$ACTIVE_IDS" | grep -qx "$VID"; then
+              echo "跳过在用版本 $VID"; continue
+            fi
+            echo "删除版本 $VID"
+            curl -s -X DELETE -H "Authorization: Bearer $CF_API_TOKEN" \
+              "$API/workers/workers/$WORKER_ID/versions/$VID" || true
+          done < old_versions.txt
+
