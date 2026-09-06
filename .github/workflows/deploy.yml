@@ -75,7 +75,9 @@ jobs:
           JWT_SECRET: ${{ secrets.MAIL_JWT_SECRET }}
         run: |
           echo "$JWT_SECRET" | npx wrangler secret put jwt_secret \
-            --config wrangler.wh1oh.toml --name "${{ vars.WORKER_NAME || 'cloud-mail' }}"
+            --config wrangler.wh1oh.toml
+          #echo "$JWT_SECRET" | npx wrangler secret put jwt_secret \
+          #  --config wrangler.wh1oh.toml --name "${{ vars.WORKER_NAME || 'cloud-mail' }}"
 
       - name: Cleanup old Worker versions (keep latest 2)
         env:
