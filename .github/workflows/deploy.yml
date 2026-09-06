@@ -34,12 +34,21 @@ jobs:
 
       - name: Install worker dependencies
         working-directory: mail-worker
-        run: npm install   # 如果 mail-worker 也用 pnpm 管理,改成 pnpm install
+        run: pnpm install --frozen-lockfile
+
+      - name: Install and build frontend (mail-vue)
+        working-directory: mail-vue
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
 
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
+        env:
+          NODE_ENV: development   # 避免自定义 build 内部的 pnpm install 跳过 devDependencies(如 vite)
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: mail-worker
+          wranglerVersion: '4'
           command: deploy --config wrangler.wh1oh.toml
